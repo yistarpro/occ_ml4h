@@ -1,0 +1,17 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.3.0
+torchvision==0.18.0
+monai==1.3.1
+nibabel==5.4.2
+numpy==1.26.4
+scipy==1.17.1
+scikit-learn==1.7.1
+pandas==2.3.2
+pillow==12.2.0
+transformers==4.40.2
+peft==0.10.0
+llm2vec==0.2.2
+accelerate==1.13.0
+sentencepiece==0.2.1
+merlin-vlm==0.0.7
+kits23 @ git+https://github.com/neheller/kits23

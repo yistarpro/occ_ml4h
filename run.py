@@ -96,9 +96,17 @@ elif a.step == "guard":
             fd.write(cid + "\n"); fo.flush(); fd.flush()
 
 elif a.step == "position":
-    guard, blank = OnManifoldGuard.load(a.guard_fit) if a.guard_fit else (None, None)
+    if getattr(model, "POSITION_GUARD", "saved") == "cohort":
+        # The guard is fitted on the cases that are shifted; the reference is the first case's blanked image.
+        cases = list(all_cases())
+        guard = OnManifoldGuard().fit(np.stack([adapter.embed_image(c.image) for _, c in cases]))
+        c0 = cases[0][1]
+        blank = guard.distance(adapter.embed_image(perturb.erase(c0.image, c0.body, perturb.body_mean(c0.image, c0.body))))
+    else:
+        guard, blank = OnManifoldGuard.load(a.guard_fit) if a.guard_fit else (None, None)
+        cases = all_cases()
     terms, skipped, na = [], 0, 0
-    for cid, case in all_cases():
+    for cid, case in cases:
         t, s, m = position_terms(adapter, case, model.OFFSETS, model.AXIS, a.k, model.PLANE, guard, blank)
         terms += t; skipped += s; na += m
     json.dump(dict(terms=[[float(x), float(y)] for x, y in terms], skipped=skipped, na=na), open(a.out, "w"))

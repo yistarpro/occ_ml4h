@@ -7,6 +7,7 @@ from . import medsiglip_common as C
 
 PLANE, AXIS, OFFSETS = (0, 1), 1, [-96, -48, 0, 48, 96]
 GUARD_SAMPLE = 200
+POSITION_GUARD = "cohort"       
 
 
 class MedSigLIPAdapter(VLMAdapter):

@@ -7,3 +7,4 @@ __pycache__/
 *.npz
 *.json
 results/
+!data/merlin_scans.json

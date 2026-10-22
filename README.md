@@ -33,31 +33,42 @@ $\mathrm{std}_{\mathrm{null}}$ is the standard deviation of a null in which one 
 
 ## Running
 
-    pip install -e .
+    pip install -r requirements.txt && pip install -e .
     python examples/toy.py
 
-On a model, after setting the paths in `config/paths.py`:
+Set the paths in `config/paths.py`, then run the whole audit of one model:
 
     bash run_audit.sh merlin          # or renalclip, medsiglip, validation
 
 The results are stored in `results/<model>/`: the intermediate tables (`drops.csv`, `guard.npz`, `guard.csv`, `position.json`) and the four measures in `summary.json`. For `validation`, each scorer has its own folder, `results/validation/randomized_encoder/` and `results/validation/grounded_scorer/`. A second argument sets another output folder.
 
-The script runs these steps:
+For Merlin, `run_audit.sh` uses the scans of `data/merlin_scans.json` if the file is present, and every scan in
+`MERLIN_IMAGES` otherwise, with a warning. It runs, step by step:
 
-    python scripts/totalsegmentator_masks.py           # Merlin only
-    python run.py merlin drops     --out drops.csv
-    python run.py merlin guard_fit --out guard.npz
-    python run.py merlin guard     --guard-fit guard.npz --drops drops.csv --out guard.csv
-    python run.py merlin position  --guard-fit guard.npz --out position.json
+    python scripts/totalsegmentator_masks.py data/merlin_scans.json
+    python run.py merlin drops     --scans data/merlin_scans.json --out drops.csv
+    python run.py merlin guard_fit --scans data/merlin_scans.json --out guard.npz
+    python run.py merlin guard     --scans data/merlin_scans.json --guard-fit guard.npz --drops drops.csv --out guard.csv
+    python run.py merlin position  --scans data/merlin_scans.json --guard-fit guard.npz --out position.json
     python summarize.py --drops drops.csv --guard guard.csv --position position.json
 
-The same four steps run for `renalclip` and `medsiglip`. MedSigLIP's boxes are all present cases, so its detection AUROC comes from `python run.py medsiglip detection --out detection.csv`, passed to `summarize.py --detection detection.csv`. For the validation of the measure design, the randomized encoder runs `drops`, `guard_fit` and `guard` with `--random-encoder`, and `merlin_grounded` runs `drops` only.
-On a cluster, `--shard i/N` splits the cases of any step; give `summarize.py` every shard's files. `--scans` takes a json list of case ids.
+Without `--scans`, a step runs on every case; the mask script also takes study ids or no argument.
+RenalCLIP and MedSigLIP run the same four steps without masks or a scan list, and their position step fits its guard on
+the cases it shifts, with the first case's blanked image as the reference. MedSigLIP's boxes are all present cases, so
+its detection AUROC comes from `python run.py medsiglip detection --out detection.csv`, passed to
+`summarize.py --detection detection.csv`. For the validation of the measure design, the randomized encoder runs
+`drops`, `guard_fit` and `guard` with `--random-encoder`, and `merlin_grounded` runs `drops` only.
+On a cluster, `--shard i/N` splits the cases of any step; give `summarize.py` every shard's files.
 
 Every path is set once in `config/paths.py`. Sources:
 
 | model | sources |
 |---|---|
 | Merlin | `pip install merlin-vlm`; the Merlin Abdominal CT Dataset (Stanford AIMI, data use agreement); masks from TotalSegmentator v2 |
-| RenalCLIP | github.com/dt-yuhui/RenalCLIP and huggingface.co/taoyh/RenalCLIP; Meta-Llama-3-8B-Instruct; KiTS23 (`pip install kits23`) |
+| RenalCLIP | github.com/dt-yuhui/RenalCLIP and huggingface.co/taoyh/RenalCLIP; Meta-Llama-3-8B-Instruct; KiTS23 (github.com/neheller/kits23) |
 | MedSigLIP | huggingface.co/google/medsiglip-448; ChestX-ray14 images, `BBox_List_2017.csv`, `Data_Entry_2017_v2020.csv`, `test_list.txt` |
+
+## Software
+
+Python 3.11, CUDA 12.1. `pip install -r requirements.txt` for the audit; TotalSegmentator runs in a separate environment,
+`pip install -r requirements-totalsegmentator.txt`.

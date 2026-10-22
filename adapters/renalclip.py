@@ -7,6 +7,7 @@ from . import renalclip_common as C
 
 PLANE, AXIS, OFFSETS = (1, 2), 1, [-24, -12, 0, 12, 24]
 GUARD_SAMPLE = 150
+POSITION_GUARD = "cohort"
 FINDING = "malignancy"
 
 
