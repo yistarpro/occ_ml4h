@@ -122,9 +122,12 @@ def label_specificity(pairs, std_null):
         o1 = [occ_of[(p.case, p.finding)] for p in g1]; o0 = [occ_of[(p.case, p.finding)] for p in g0]
         s1 = [p.s for p in g1]; s0 = [p.s for p in g0]
         d, dlo, dhi = (v / std_null for v in M.bootstrap_diff_ci(s1, s0))
+        sep = np.mean(s1) - np.mean(s0)                                  # the score's separation, before and after erasing O
+        sep_after = np.mean([p.s - p.d_organ for p in g1]) - np.mean([p.s - p.d_organ for p in g0])
         return dict(n1=len(g1), n0=len(g0), occ_y1=M.bootstrap_mean_ci(o1), occ_y0=M.bootstrap_mean_ci(o0),
                     gap=M.bootstrap_diff_ci(o1, o0), Delta_f=(d, dlo, dhi),
-                    G_f=M.bootstrap_G_f_ci(o1, o0, s1, s0, std_null), established=bool(dlo > 0))
+                    G_f=M.bootstrap_G_f_ci(o1, o0, s1, s0, std_null), established=bool(dlo > 0),
+                    separation_after_erasure=float(sep_after / sep) if sep != 0 else float("nan"))
 
     out = {}
     if any(p.class_label is not None for p in pairs):                  # diagnostic label

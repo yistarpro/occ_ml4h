@@ -40,7 +40,7 @@ Set the paths in `config/paths.py`, then run the whole audit of one model:
 
     bash run_audit.sh merlin          # or renalclip, medsiglip, validation
 
-The results are stored in `results/<model>/`: the intermediate tables (`drops.csv`, `guard.npz`, `guard.csv`, `position.json`) and the four measures in `summary.json`. For `validation`, each scorer has its own folder, `results/validation/randomized_encoder/` and `results/validation/grounded_scorer/`. A second argument sets another output folder.
+The results are stored in `results/<model>/`: the intermediate tables (`drops.csv`, `guard.npz`, `guard.csv`, `position.json`) and the four measures in `summary.json`, which also holds, per finding, $\overline{\mathrm{occ}}$ over the present pairs, the separation left after erasing the region, the detection AUROC after erasing the region and after erasing the controls, and the correlations with $\Delta_f$ (the appendix analyses of the paper). For `validation`, each scorer has its own folder, `results/validation/randomized_encoder/` and `results/validation/grounded_scorer/`. A second argument sets another output folder.
 
 For Merlin, `run_audit.sh` uses the scans of `data/merlin_scans.json` if the file is present, and every scan in
 `MERLIN_IMAGES` otherwise, with a warning. It runs, step by step:

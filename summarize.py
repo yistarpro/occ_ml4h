@@ -45,6 +45,28 @@ ls = out["label_specificity"]
 both = {f: r for f, r in ls.items() if r["n1"] > 0 and r["n0"] > 0}
 quantities = {"occ_bar": occ_f, "gap": {f: r["gap"][0] for f, r in both.items()}, "occ_bar_y0": {f: r["occ_y0"][0] for f, r in both.items()},
               "G_f": {f: r["G_f"][0] for f, r in both.items() if r["established"]}, "Delta_f": {f: r["Delta_f"][0] for f, r in both.items()}}
+out["occ_bar"] = occ_f
+
+# Detection after erasure: AUROC of s - d_organ and of s - mean d_control, per finding with both classes.
+D["s_organ_erased"] = D.s - D.d_organ
+D["s_control_erased"] = D.s - D[dc].mean(axis=1)
+out["detection_after_erasure"] = {}
+for f, g in D.groupby("finding"):
+    if 0 < g.y.sum() < len(g):
+        out["detection_after_erasure"][f] = dict(n1=int(g.y.sum()), n0=int(len(g) - g.y.sum()), none=auroc(g.s, g.y),
+                                                 organ=auroc(g.s_organ_erased, g.y), control=auroc(g.s_control_erased, g.y))
+big = {f: r for f, r in out["detection_after_erasure"].items() if r["n1"] >= 5}
+if big:
+    out["detection_after_erasure_mean"] = dict(n=len(big), **{k: float(np.mean([r[k] for r in big.values()])) for k in ("none", "organ", "control")},
+                                               organ_below_control=sum(r["organ"] - r["none"] < r["control"] - r["none"] for r in big.values()))
+
+# Correlations with Delta_f, over the findings whose separation is established.
+est = {f: r for f, r in both.items() if r["established"]}
+out["correlation_with_delta_f"] = {}
+for q, key in (("G_f", "G_f"), ("gap", "gap")):
+    if len(est) >= 4:
+        out["correlation_with_delta_f"][q] = spearman_ci([r[key][0] for r in est.values()], [r["Delta_f"][0] for r in est.values()])
+
 out["correlation_with_auroc"] = {}
 for q, v in quantities.items():
     ks = [f for f in v if f in auc and np.isfinite(auc[f])]
@@ -64,5 +86,12 @@ for f, r in out["label_specificity"].items():
     print(f"label-spec.     G_f({f}) = {r['G_f'][0]:+.2f} [{r['G_f'][1]:+.2f}, {r['G_f'][2]:+.2f}]" + ("" if r["established"] else "  (not established)"))
 for q, r in out["correlation_with_auroc"].items():
     print(f"rho({q}, AUROC) = {r['rho']:+.2f} [{r['ci'][0]:+.2f}, {r['ci'][1]:+.2f}], p = {r['p']:.2f}, n = {r['n']}")
+for q, r in out["correlation_with_delta_f"].items():
+    print(f"rho({q}, Delta_f) = {r['rho']:+.2f} [{r['ci'][0]:+.2f}, {r['ci'][1]:+.2f}], p = {r['p']:.2f}, n = {r['n']}")
+for f, r in out["detection_after_erasure"].items():
+    print(f"AUROC({f}) = {r['none']:.3f}, after O {r['organ']:.3f}, after control {r['control']:.3f}, n1 = {r['n1']}")
+if "detection_after_erasure_mean" in out:
+    m = out["detection_after_erasure_mean"]
+    print(f"AUROC mean over {m['n']} findings with n1 >= 5: {m['none']:.3f}, after O {m['organ']:.3f}, after control {m['control']:.3f}; O below control for {m['organ_below_control']}")
 if a.out:
     json.dump(out, open(a.out, "w"), indent=1, default=float)
