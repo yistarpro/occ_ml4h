@@ -52,9 +52,11 @@ def R_O_terms(occ_f: np.ndarray, occ_null_f: np.ndarray):
     sqrt(1/K sum_i std_{f in F_O}^2(occ^null_i(x, f))).
 
     occ_f: (|F_O|,); occ_null_f: (|F_O|, K)."""
-    num = np.asarray(occ_f, float).std(ddof=1)
-    den = np.sqrt((np.asarray(occ_null_f, float).std(axis=0, ddof=1) ** 2).mean())
-    return num, den
+    occ_f, occ_null_f = np.asarray(occ_f, float), np.asarray(occ_null_f, float)
+    tol = 1e-9 * max(np.abs(occ_f).max(), np.abs(occ_null_f).max(), 1e-300)   # identical scores: spread 0, not rounding error
+    num = occ_f.std(ddof=1); den = np.sqrt((occ_null_f.std(axis=0, ddof=1) ** 2).mean())
+    return (0.0 if num < tol else num), (0.0 if den < tol else den)
+
 
 
 def pooled_ratio(terms) -> float:
