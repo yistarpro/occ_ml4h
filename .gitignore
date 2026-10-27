@@ -8,3 +8,4 @@ __pycache__/
 *.json
 results/
 !data/merlin_scans.json
+*.egg-info/

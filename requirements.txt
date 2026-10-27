@@ -11,7 +11,9 @@ pillow==12.2.0
 transformers==4.40.2
 peft==0.10.0
 llm2vec==0.2.2
+pyarrow<22
 accelerate==1.13.0
 sentencepiece==0.2.1
 merlin-vlm==0.0.7
+timm==0.6.13                   
 kits23 @ git+https://github.com/neheller/kits23

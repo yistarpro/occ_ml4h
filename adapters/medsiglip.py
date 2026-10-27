@@ -41,12 +41,13 @@ def _box_mask(bx, shape):
 
 
 def cases(scans=None):
-    """("image|finding", Case) for every box; a control must also avoid the other findings' boxes on the image.
+    """("image|finding", Case) for every box; `scans` may list image names or "image|finding" case ids (the guard
+    step passes the drop table's case ids). A control must also avoid the other findings' boxes on the image.
     The box exists only where the finding is annotated, so every case is present."""
     from PIL import Image
     groups = C.boxes()
     for im, f in sorted(groups):
-        if f not in C.PHRASE or (scans and im not in scans) or not os.path.exists(f"{C.CXR14}/images/{im}"):
+        if f not in C.PHRASE or (scans and im not in scans and f"{im}|{f}" not in scans) or not os.path.exists(f"{C.CXR14}/images/{im}"):
             continue
         x = np.asarray(Image.open(f"{C.CXR14}/images/{im}").convert("L"), np.float32)
         O = _box_mask(groups[(im, f)], x.shape)

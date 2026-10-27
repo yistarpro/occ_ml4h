@@ -36,6 +36,8 @@ $\mathrm{std}_{\mathrm{null}}$ is the standard deviation of a null in which one 
     pip install -r requirements.txt && pip install -e .
     python examples/toy.py
 
+`requirements.txt` lists the direct pins; `requirements-lock.txt` is the full environment that produced the results, for an exact reinstall (`pip install -r requirements-lock.txt`).
+
 Set the paths in `config/paths.py`, then run the whole audit of one model:
 
     bash run_audit.sh merlin          # or renalclip, medsiglip, validation

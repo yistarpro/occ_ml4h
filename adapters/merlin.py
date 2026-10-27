@@ -33,7 +33,8 @@ def findings():
 def load(random_encoder=False):
     """Merlin with its text vectors; random_encoder resets every weight of the image encoder (negative control)."""
     import torch
-    from visualdependence.adapters.merlin import Merlin
+    # from visualdependence.adapters.merlin import Merlin
+    from merlin import Merlin 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = Merlin(ImageEmbedding=False).to(device).eval()
     if random_encoder:

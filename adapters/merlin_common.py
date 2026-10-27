@@ -72,7 +72,23 @@ def load_mask(sid, structures):
     for s in structures:
         p = MASKS / sid / f"{s}.nii.gz"
         if p.exists():
-            m |= _mask_tf({"m": str(p)})["m"][0].numpy() > 0.5
+            m |= _structure(sid, s, p)
+    return m
+
+
+def _structure(sid, s, p):
+    """One structure's mask in Merlin's frame, transformed once and cached under MERLIN_CACHE/masks (bit-packed,
+    compressed): the audit reads the same structure for several findings and again in every step, and the
+    transform of a full-resolution mask costs seconds."""
+    c = Path(CACHE) / "masks" / sid / f"{s}.npz"
+    if c.exists():
+        return np.unpackbits(np.load(c)["m"])[: int(np.prod(SHAPE))].reshape(SHAPE).astype(bool)
+    m = _mask_tf({"m": str(p)})["m"][0].numpy() > 0.5
+    c.parent.mkdir(parents=True, exist_ok=True)
+    tmp = c.with_name(f"{s}.{os.getpid()}.tmp.npz")
+    with open(tmp, "wb") as f:
+        np.savez_compressed(f, m=np.packbits(m.ravel()))
+    os.replace(tmp, c)                                            # atomic, so parallel shards never read a partial file
     return m
 
 
